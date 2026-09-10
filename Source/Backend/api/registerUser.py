@@ -1,26 +1,27 @@
 import sys
-
-sys.path.append("/home/neonchig/Documents/Project/Source/Backend/models")
-
 import bcrypt
 import logging
 import sqlite3
 
-from user import User # type: ignore
 from fastapi import APIRouter, status
+
+sys.path.append("/home/neonchig/Documents/Project/Source/Backend/models")
+
+from user import User # type: ignore
 
 router = APIRouter()
 db = sqlite3.connect("/home/neonchig/app.db")
 cursor = db.cursor()
 
-@router.post("/reg")
+@router.post("/register")
 async def regUser(user: User):
     passwd = user.password.strip()
     logging.log(1, passwd)
     salt =  bcrypt.gensalt()
     password = bcrypt.hashpw(user.password.encode('utf-8'), salt)
-    cursor.execute('INSERT INTO users (username, password) VALUES (?, ?)',
-                   (user.username, password.decode()))
+    cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+                   (user.username, user.email, password.decode()))
+    
     db.commit()
     db.close()
     return status.HTTP_201_CREATED
