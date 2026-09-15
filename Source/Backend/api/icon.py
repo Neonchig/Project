@@ -5,4 +5,4 @@ router = APIRouter()
 
 @router.get("/favicon.ico")
 def getIcon():
-    return FileResponse("favicon.ico")
+    return FileResponse("Backend/static/favicon.ico")

@@ -1,10 +1,8 @@
-import asyncio
-from websockets.asyncio.server import serve, broadcast
-import datetime
-import uuid
-import json
 import jwt
+import json
 import aiohttp
+
+from websockets.asyncio.server import broadcast, serve
 
 connected = set()
 
@@ -33,7 +31,7 @@ async def handler(websocket):
                         pass
 
                     case 'register':
-                        await aiohttp.request("POST", "http://localhost:8000", data={})
+                        aiohttp.request("POST", "http://localhost:8000", data={})
 
                     case _:
                         await websocket.send('{"code": 418; "details": "incorrect "type" field"}')
@@ -41,10 +39,6 @@ async def handler(websocket):
             except json.decoder.JSONDecodeError:
                 print("str")
             
-
-
-async def main():
+async def socket_serve():
     async with serve(handler, "localhost", 9801) as server:
         await server.serve_forever()
-
-asyncio.run(main())

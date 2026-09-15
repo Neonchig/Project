@@ -1,0 +1,7 @@
+bcrypt
+fastapi
+pydantic
+websockets
+jwt
+aiohttp
+uvicorn

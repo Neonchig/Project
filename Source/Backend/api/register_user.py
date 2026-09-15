@@ -5,9 +5,7 @@ import sqlite3
 
 from fastapi import APIRouter, status
 
-sys.path.append("/home/neonchig/Documents/Project/Source/Backend/models")
-
-from user import User # type: ignore
+from Backend.models.user import User
 
 router = APIRouter()
 db = sqlite3.connect("/home/neonchig/app.db")
