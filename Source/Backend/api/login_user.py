@@ -1,9 +1,9 @@
-import jwt
-import bcrypt
 import sqlite3
 
+import bcrypt
 from fastapi import APIRouter, status
-from Backend.models.user import Login_user
+
+from Source.Backend.models.user import Login_user
 
 router = APIRouter()
 conn = sqlite3.connect("/home/neonchig/app.db", check_same_thread=False)
@@ -14,9 +14,7 @@ cursor = conn.cursor()
 def login(user: Login_user):
 
     if not(user.email or user.username):
-        return status.HTTP_422_UNPROCESSABLE_CONTENT 
-    
-    passwd = user.password.strip()
+        return status.HTTP_422_UNPROCESSABLE_CONTENT
 
     if user.username:
         cursor.execute('SELECT * FROM users WHERE username = ?', [user.username])
@@ -36,4 +34,3 @@ def login(user: Login_user):
         return status.HTTP_200_OK
 
     return status.HTTP_401_UNAUTHORIZED
-
