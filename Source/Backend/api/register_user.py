@@ -1,22 +1,28 @@
-import sqlite3
+import hashlib
+import secrets
 
 import bcrypt
-from fastapi import APIRouter, status
+from fastapi import APIRouter
 
+from Source.Backend.database.database import register_user
 from Source.Backend.models.user import User
 
 router = APIRouter()
-db = sqlite3.connect("/home/neonchig/app.db")
-cursor = db.cursor()
 
 @router.post("/register")
 async def regUser(user: User):
-    # passwd = user.password.strip()
-    salt =  bcrypt.gensalt()
-    password = bcrypt.hashpw(user.password.encode('utf-8'), salt)
-    cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-                   (user.username, user.email, password.decode()))
 
-    db.commit()
-    db.close()
-    return status.HTTP_201_CREATED
+	username = user.username
+	email = user.email
+	password = hashlib.sha256(user.password.strip().encode('utf-8')).digest()
+
+	salt =  bcrypt.gensalt()
+	password = bcrypt.hashpw(password, salt).decode()
+	refresh_token = secrets.token_urlsafe(64)
+
+	output = await register_user(username, password, refresh_token, email)
+
+	if output['status'] == 201:
+		output['token'] = refresh_token
+
+	return output
