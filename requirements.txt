@@ -2,6 +2,6 @@ bcrypt
 fastapi
 pydantic
 websockets
-jwt
-aiohttp
+pyjwt
+httpx
 uvicorn

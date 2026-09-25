@@ -3,6 +3,7 @@ from fastapi import FastAPI
 
 from Source.Backend.api.icon import router as routeIcon
 from Source.Backend.api.login_user import router as loginRoute
+from Source.Backend.api.refresh import router as routeRefresh
 from Source.Backend.api.register_user import router as routeRegister
 
 app = FastAPI()
@@ -10,6 +11,7 @@ app = FastAPI()
 app.include_router(routeIcon)
 app.include_router(routeRegister)
 app.include_router(loginRoute)
+app.include_router(routeRefresh)
 
 async def api_serve():
 

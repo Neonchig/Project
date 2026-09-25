@@ -2,7 +2,7 @@ import hashlib
 import secrets
 
 import bcrypt
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 
 from Source.Backend.database.database import register_user
 from Source.Backend.models.user import User
@@ -22,7 +22,7 @@ async def regUser(user: User):
 
 	output = await register_user(username, password, refresh_token, email)
 
-	if output['status'] == 201:
-		output['token'] = refresh_token
+	if output["status"] != 201:
+		return {"status": f"{status.HTTP_500_INTERNAL_SERVER_ERROR}"}
 
-	return output
+	return {'status': f"{status.HTTP_201_CREATED}", "refresh": refresh_token}

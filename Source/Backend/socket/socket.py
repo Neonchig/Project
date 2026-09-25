@@ -1,16 +1,36 @@
 import json
+from http import HTTPStatus
 
-import aiohttp
 from websockets.asyncio.server import serve
+
+from Source.Backend.auth.token import validate_user
 
 connected = set()
 
+
+async def process_request(conn, request) -> int | None:
+
+	if "Authorization" not in request.headers:
+		return HTTPStatus.UNAUTHORIZED
+
+	auth = request.headers.get("Authorization", "").split()
+	try:
+		if not(len(auth) == 2 and auth[0].lower() == "bearer" and auth[1]):
+			return HTTPStatus.UNAUTHORIZED
+	except IndexError:
+		return HTTPStatus.UNAUTHORIZED
+
+	if not(validate_user(auth[1])):
+		return HTTPStatus.UNAUTHORIZED
+
+	return None
+
 async def handler(websocket):
 
-	connected.add(websocket)
 
-	for i, j in websocket.request.headers.raw_items():
-		await websocket.send(f"{i}: {j}")
+	connected.add(websocket)
+	# for i, j in websocket.request.headers.raw_items():
+	# 	await websocket.send(f"{i}: {j}")
 
 	async for m in websocket:
 		m = m.strip()
@@ -18,25 +38,18 @@ async def handler(websocket):
 			await websocket.send("pong")
 		else:
 			try:
-				mess = json.loads(m)
+				request = json.loads(m)
+			except json.JSONDecodeError:
+				return json.dumps({'status': HTTPStatus.UNPROCESSABLE_CONTENT, 'message': 'Incorrect "type" field'})
 
-				match mess['type']:
-
-					case 'send':
-						pass
-
-					case 'login':
-						pass #TODO
-
-					case 'register':
-						aiohttp.request("POST", "http://localhost:8000", data={})
-
-					case _:
-						await websocket.send('{"code": 418; "details": "incorrect "type" field"}')
-
-			except json.decoder.JSONDecodeError:
-				print("str")
+			request_type = request.get("type", "")
+			if request_type:
+				match request_type:
+					case "pers_mess":
+						pass # TODO
+					case "grp_mess":
+						pass # TODO
 
 async def socket_serve():
-	async with serve(handler, "localhost", 9801) as server:
+	async with serve(handler, "localhost", 9801, process_request=process_request) as server:
 		await server.serve_forever()

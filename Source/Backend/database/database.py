@@ -2,9 +2,9 @@ import datetime
 
 import aiosqlite
 from fastapi import status
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 from Source.Backend.core.config import env
-from Source.Backend.models.user import User
 
 
 async def register_user(username: str, password: str, refresh_token: str, email: str | None = None) -> dict[str, str | int]:
@@ -32,26 +32,37 @@ async def register_user(username: str, password: str, refresh_token: str, email:
 
 	return {"status": status.HTTP_201_CREATED}
 
-async def login_user(username: str) -> User:
+async def get_user(username: str) -> aiosqlite.Row | dict[str, str]:
 
 	connection = await aiosqlite.connect(f"{env['ProjPath']}/Source/Backend/database/app.db")
 	connection.row_factory = aiosqlite.Row
 
 	try:
 
-		output = await connection.execute("SELECT * FROM users WHERE username = ?", [username.lower()])
+		output = await connection.execute("SELECT * FROM users WHERE username = ?;", [username.lower()])
 		output = list(await output.fetchall())
 		await connection.close()
 
 		if len(output) > 1:
-			return {'type': 'about:blank', 'status': status.HTTP_500_INTERNAL_SERVER_ERROR, 'message': 'Internal database error'}
+			return {'type': 'about:blank', 'status': f"{status.HTTP_500_INTERNAL_SERVER_ERROR}", 'message': 'Internal database error'}
 
-		entry = next(iter(output))
-		user_info = User(username = entry['username'], password = entry['password'], email = entry['email'])
 
-	except Exception as e:
+	except IndexError:
 		await connection.close()
-		return str(e)
+		return {"status": f"{HTTP_500_INTERNAL_SERVER_ERROR}", "message": "User not found"}
 		 # TODO: Хэндлить исключения
 
-	return user_info
+	return output[0]
+
+
+async def update_token(username: str, new_token: str):
+
+	connection = await aiosqlite.connect(f"{env['ProjPath']}/Source/Backend/database/app.db")
+	connection.row_factory = aiosqlite.Row
+
+	try:
+		await connection.execute("UPDATE users SET refresh_token=?, token_until=? WHERE username = ?;", [new_token, (datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(days=30)), username])
+		await connection.commit()
+		await connection.close()
+	except ValueError:
+		return {"status": status.HTTP_500_INTERNAL_SERVER_ERROR, "message": "User not found"}
