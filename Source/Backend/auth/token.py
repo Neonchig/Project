@@ -1,6 +1,7 @@
 import datetime
 
 import jwt
+from jwt.exceptions import DecodeError
 
 from Source.Backend.core.config import env
 
@@ -37,8 +38,10 @@ def token_generator(sub: str, aud: str):
 def validate_user(token: str):
 	if not(env['Secret']) or not(env['ServUUID']):
 		raise UnboundLocalError('Secret not found in .env file')
-
-	data = jwt.decode(token, env['Secret'], 'HS256', audience="user")
+	try:
+		data = jwt.decode(token, env['Secret'], 'HS256', audience="user")
+	except DecodeError:
+		raise DecodeError
 
 	if data['iss'] != env['ServUUID']:
 		raise jwt.InvalidIssuerError
