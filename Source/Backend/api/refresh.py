@@ -10,9 +10,11 @@ router = APIRouter()
 @router.post("/refresh")
 async def refresh_tokens(data: dict[str, str]):
 
-	username = data.get("username", "")
-	token = data.get("token", "")
 
+	username = data.get("username", "")
+	token = data.get("refresh_token", "")
+	if not(username and token):
+		return {"status": f"{status.HTTP_422_UNPROCESSABLE_CONTENT}", "message": "Invalid username or token"}
 	user = await get_user(username)
 
 	real_token = user["refresh_token"]

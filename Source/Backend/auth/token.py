@@ -13,8 +13,8 @@ def token_generator(sub: str, aud: str):
 
 	payload = {
 		"iss": env['ServUUID'],
-		"sub": sub,
-		"aud": aud,
+		"sub": sub.lower(),
+		"aud": aud.lower(),
 		"iat": datetime.datetime.now(datetime.UTC).timestamp(),
 		"exp": (datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=15)).timestamp()
 	}
@@ -46,7 +46,7 @@ def validate_user(token: str):
 	if data['iss'] != env['ServUUID']:
 		raise jwt.InvalidIssuerError
 
-	return True
+	return data
 
 if __name__ == "__main__":
 	print(token_generator("Neoniche", "user"))
