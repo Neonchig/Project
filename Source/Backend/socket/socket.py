@@ -6,7 +6,12 @@ from jwt.exceptions import DecodeError
 from websockets.asyncio.server import serve
 
 from Source.Backend.auth.token import validate_user
-from Source.Backend.database.database import clear_unsent, get_group_by_name, get_unsent, get_users_in_group
+from Source.Backend.database.database import (
+	clear_unsent,
+	get_group_by_name,
+	get_unsent,
+	get_users_in_group,
+)
 
 connected_idle = set()
 connected = {}
@@ -15,8 +20,6 @@ async def handler(websocket):
 
 
 	connected_idle.add(websocket)
-	# for i, j in websocket.request.headers.raw_items():
-	# 	await websocket.send(f"{i}: {j}")
 
 	auth = {}
 	auth_raw = await websocket.recv()

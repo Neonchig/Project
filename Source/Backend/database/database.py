@@ -1,15 +1,15 @@
+
 import datetime
+import json
 from sqlite3 import IntegrityError
 from uuid import uuid4
 
 import aiosqlite
-import json
 from fastapi import status
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-import asyncio
-
 from Source.Backend.core.config import env
+
 
 async def get_unsent(username: str):
 	connection = await aiosqlite.connect(f"{env['ProjPath']}/Source/Backend/database/app.db")
