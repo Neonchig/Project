@@ -2,8 +2,8 @@ import secrets
 
 from fastapi import APIRouter, status
 
-from Source.Backend.auth.token import token_generator
-from Source.Backend.database.database import get_user, update_token
+from Source.Server.auth.token import token_generator
+from Source.Server.database.database import get_user, update_token
 
 router = APIRouter()
 
@@ -13,8 +13,10 @@ async def refresh_tokens(data: dict[str, str]):
 
 	username = data.get("username", "")
 	token = data.get("refresh_token", "")
-	if not(username and token):
-		return {"status": f"{status.HTTP_422_UNPROCESSABLE_CONTENT}", "message": "Invalid username or token"}
+	if not(username):
+		return {"status": f"{status.HTTP_422_UNPROCESSABLE_CONTENT}", "message": "Invalid username"}
+	if not(token):
+		return {"status": f"{status.HTTP_422_UNPROCESSABLE_CONTENT}", "message": "Invalid token"}
 	user = await get_user(username)
 
 	real_token = user["refresh_token"]

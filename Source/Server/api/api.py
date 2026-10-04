@@ -1,10 +1,10 @@
 import uvicorn
 from fastapi import FastAPI
 
-from Source.Backend.api.icon import router as routeIcon
-from Source.Backend.api.login_user import router as loginRoute
-from Source.Backend.api.refresh import router as routeRefresh
-from Source.Backend.api.register_user import router as routeRegister
+from Source.Server.api.icon import router as routeIcon
+from Source.Server.api.login_user import router as loginRoute
+from Source.Server.api.refresh import router as routeRefresh
+from Source.Server.api.register_user import router as routeRegister
 
 app = FastAPI()
 

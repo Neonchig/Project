@@ -4,14 +4,13 @@ import secrets
 import bcrypt
 from fastapi import APIRouter, status
 
-from Source.Backend.database.database import register_user
-from Source.Backend.models.user import User
+from Source.Server.database.database import register_user
+from Source.Server.models.user import User
 
 router = APIRouter()
 
 @router.post("/register")
 async def regUser(user: User):
-	print(user.model_dump())
 	username = user.username.strip()
 	if user.email:
 		email = user.email.strip()

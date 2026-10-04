@@ -5,8 +5,8 @@ from json import JSONDecodeError
 from jwt.exceptions import DecodeError
 from websockets.asyncio.server import serve
 
-from Source.Backend.auth.token import validate_user
-from Source.Backend.database.database import (
+from Source.Server.auth.token import validate_user
+from Source.Server.database.database import (
 	clear_unsent,
 	get_group_by_name,
 	get_unsent,
@@ -87,7 +87,7 @@ async def handler(websocket):
 						else:
 							await websocket.send(json.dumps({'status': HTTPStatus.UNPROCESSABLE_CONTENT, 'message': "Incorrect 'to' field"}))
 					case "group_message":
-						group_name = request.get("grp_name", "")
+						group_name = request.get("group_name", "")
 						if group_name:
 							to = (await get_group_by_name(group_name))[1]
 							if to:
@@ -96,7 +96,7 @@ async def handler(websocket):
 								websockets_to.remove(connected.get(user_info.get('sub')))
 								if websockets_to:
 									for i in websockets_to:
-										if i: await i.send(json.dumps({"sender": user_info.get('sub'), "message": request.get('message', '')}))
+										if i: await i.send(json.dumps({"from": user_info.get('sub'), "message": request.get('message', '')}))
 								else:
 									pass
 							else:

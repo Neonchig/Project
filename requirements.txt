@@ -1,7 +1,9 @@
-bcrypt
+aiosqlite
 fastapi
-pydantic
-websockets
-pyjwt
-httpx
+bcrypt
 uvicorn
+pydantic
+pyjwt
+websockets
+dotenv
+requests

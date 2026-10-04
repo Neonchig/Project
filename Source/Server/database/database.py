@@ -6,9 +6,8 @@ from uuid import uuid4
 
 import aiosqlite
 from fastapi import status
-from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-from Source.Backend.core.config import env
+from Source.Server.core.config import env
 
 
 async def get_unsent(username: str):
@@ -118,7 +117,7 @@ async def get_user(username: str) -> aiosqlite.Row | dict[str, str]:
 
 	except IndexError:
 		await connection.close()
-		return {"status": f"{HTTP_500_INTERNAL_SERVER_ERROR}", "message": "User not found"}
+		return {"status": f"{status.HTTP_500_INTERNAL_SERVER_ERROR}", "message": "User not found"}
 		 # TODO: Хэндлить исключения
 
 	return output[0]
