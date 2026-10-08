@@ -1,39 +1,58 @@
 import asyncio
+import getpass
 import json
 
 import aiofiles
 import aiohttp
 import keyring
 
+# TODO: Полный рефактор этого ужаса
 
-async def init():
-	conf = await read_config()
-	if conf.get('username', '') == '':
-		conf['username'] = input("Введите имя пользователя: ")
-	if conf.get('server', '') == '':
-		conf['server'] = 'localhost'
-	if conf.get('ws-port', '') == '':
-		conf['ws-port'] = 9801
-	if conf.get('api-port', '') == '':
-		conf['api-port'] = 8080
-	if conf.get('jwt', '') == '':
-		auth = await refresh(
-				conf.get('server', ''),
-				conf.get('username', ''),
-				keyring.get_password('NeoMessenger-Refresh', conf.get('username', ''))
-		)
-		conf['jwt'] = auth.get('refresh_token', '')
-		print(auth)
+async def write_socket(websocket, first_message: str | None = None):
+	if first_message:
+		await websocket.send(first_message)
+	while True:
+		message = await asyncio.to_thread(input)
+		if message == "exit":
+			raise EOFError
 
-	username = conf.get('username', '')
-	host = conf.get('server', '')
-	ws_port = conf.get('ws-port', '')
-	api_port = conf.get('api-port', '')
-	jwt = conf.get('jwt', '')
-	refresh_token = keyring.get_password('NeoMessenger-Refresh', conf.get('username', ''))
+		await websocket.send(message)
 
-	keyring.set_password("NeoMessenger-JWT", username, response.get('bearer', ''))
-	keyring.set_password("NeoMessenger-Refresh", username, response.get('refresh_token', ''))
+async def read_socket(websocket):
+	async for message in websocket:
+		try:
+			print(message)
+		except websockets.ConnectionClosed:
+			print("Connection closed")
+
+async def init() -> dict:
+	config = await read_config()
+	username = config.get('username', '')
+	jwt = keyring.get_password('Messenger-JWT', username)
+	if not(username):
+		username = await asyncio.to_thread(input, "Введите имя пользователя: ")
+		config['username'] = username
+	if not (jwt):
+		print(config)
+		try:
+			await refresh(f"{config.get('server', '')}:{config.get('api-port', '')}", config.get('username', ''), str(keyring.get_password('Messenger-Refresh', username)))
+			return config
+
+		except ValueError:
+			while not(jwt):
+				try:
+					await login(
+						f"{config.get('server', '')}:{config.get('api-port')}",
+						username,
+						await asyncio.to_thread(getpass.getpass, "Введите пароль: ")
+					)
+					jwt = keyring.get_password('Messenger-JWT', username)
+				except ValueError as e:
+					print(e.args)
+	return config
+
+
+
 
 async def read_config():
 	async with aiofiles.open('config.json') as file:
@@ -47,7 +66,7 @@ async def read_config():
 		return config
 
 # ! НИКОГДА не вызывать перед read_config(), если не нужно полностью перезаписывать конфиг
-# ! ВСЕГДА ждать окончания чтения, чтобы избежать гонки
+# ! ВСЕГДА ждать окончания чтения, чтобы избежать состояния гонки
 async def write_config(cfg: dict):
 	async with aiofiles.open('config.json', 'w') as file:
 
@@ -60,24 +79,54 @@ async def write_config(cfg: dict):
 
 		return True
 
-async def refresh(host: str, username: str, refresh_token: str | None) -> dict:
-	if not (host and username and refresh_token):
-		return {}
+async def refresh(host: str, username: str, refresh_token: str) -> None:
 	async with aiohttp.ClientSession() as session:
+		host = f"http://{host}/refresh"
 		request = await session.post(host, json={"username": username, "refresh_token": refresh_token})
 		response = await request.json()
-		return response
 
-async def login(host: str, username: str, password: str):
+	match response.get('status'):
+		case '200':
+			keyring.set_password("Messenger-Refresh", username, response.get('refresh_token', ''))
+			keyring.set_password('Messenger-JWT', username, response.get('bearer', ''))
+		case '422':
+			raise ValueError(response.get('message', ''))
+		case '401':
+			raise ValueError(response.get('message', ''))
+		case _:
+			print(response)
+			raise RuntimeError('Internal error')
+
+
+async def login(host: str, username: str, password: str) -> None:
 	async with aiohttp.ClientSession() as session:
+		host = f"http://{host}/login"
 		request = await session.post(host, json={"username": username, "password": password})
 		response = await request.json()
-		return response
+		match response.get('status', ''):
+			case '200':
+				keyring.set_password("Messenger-Refresh", username, response.get('refresh_token', ''))
+				keyring.set_password("Messenger-JWT", username, response.get('bearer', ''))
+			case '422':
+				raise ValueError('Misformating')
+			case '401':
+				raise ValueError('Invalid credentials')
+			case _:
+				raise RuntimeError('Internal error')
 
 async def main():
+	return_status = "init"
+	config = await init()
+	await write_config(config)
+	uri = "ws://" + config.get('server', '') + ":" + str(config.get('ws-port', ''))
+	try:
+		async with websockets.connect(uri) as socket, asyncio.TaskGroup() as tg:
+			return_status = "running"
+			tg.create_task(read_socket(socket))
+			tg.create_task(write_socket(socket, json.dumps({"Authorization": f"Bearer {keyring.get_password('Messenger-JWT', config.get('username', ''))}"})))
+	except* websockets.ConnectionClosed:
+		return_status = "closed_by_server"
+	except* EOFError:
+		return_status = "closed_by_client"
 
-
-
-if __name__ == "__main__":
-	asyncio.run(init())
-	asyncio.run(main())
+	return return_status

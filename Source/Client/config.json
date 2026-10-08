@@ -1,6 +1,1 @@
-{
-  "server": "192.168.1.143",
-  "ws-port": 9801,
-  "api-port": 8080,
-  "username": ""
-}
+{"server": "192.168.1.143", "ws-port": 9801, "api-port": 8080, "username": "Neonchig"}

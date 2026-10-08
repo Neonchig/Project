@@ -5,3 +5,4 @@ __pycache__
 .env
 Test_app
 Frontend
+test.py

@@ -105,5 +105,5 @@ async def handler(websocket):
 							await websocket.send(json.dumps({'status': HTTPStatus.UNPROCESSABLE_CONTENT, 'message': "Group name must be provided"}))
 
 async def socket_serve():
-	async with serve(handler, "localhost", 9801) as server: # type: ignore
+	async with serve(handler, "0.0.0.0", 9801) as server: # type: ignore
 		await server.serve_forever()

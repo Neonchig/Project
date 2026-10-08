@@ -17,7 +17,7 @@ async def api_serve():
 
     config = uvicorn.Config(
         app = app,
-        host = "localhost",
+        host = "0.0.0.0",
         port = 8080
     )
 
