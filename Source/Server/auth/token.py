@@ -41,10 +41,14 @@ def validate_user(token: str):
 	try:
 		data = jwt.decode(token, env['Secret'], 'HS256', audience="user")
 	except DecodeError:
-		raise DecodeError
+		return {'status': 422, 'detail': 'Invalid JWT'}
+	except jwt.exceptions.ExpiredSignatureError:
+		return {'status': 401, 'detail': 'Signature expired'}
 
 	if data['iss'] != env['ServUUID']:
-		raise jwt.InvalidIssuerError
+		return {'status': 401, 'detail': 'Unknown issuer'}
+
+	data['status'] = 200
 
 	return data
 

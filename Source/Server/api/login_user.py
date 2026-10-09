@@ -19,7 +19,7 @@ router = APIRouter()
 	})
 async def login(user: User):
 
-	result = await get_user(user.username)
+	result = await get_user(user.username.lower())
 	password = hashlib.sha256(user.password.strip().encode()).digest()
 
 	try:

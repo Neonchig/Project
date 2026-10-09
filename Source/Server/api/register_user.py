@@ -11,12 +11,12 @@ router = APIRouter()
 
 @router.post("/register")
 async def regUser(user: User):
-	username = user.username.strip()
+	username = user.username.strip().lower()
 	if user.email:
 		email = user.email.strip()
 	else:
 		email = None
-	password = hashlib.sha256(user.password.strip().encode('utf-8')).digest()
+	password = user.password.strip().encode('utf-8')
 
 	salt =  bcrypt.gensalt()
 	password = bcrypt.hashpw(password, salt).decode()

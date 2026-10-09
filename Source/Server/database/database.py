@@ -130,7 +130,7 @@ async def update_token(username: str, new_token: str):
 	connection.row_factory = aiosqlite.Row
 
 	try:
-		await connection.execute("UPDATE users SET refresh_token=?, token_until=? WHERE username = ?;", [new_token, (datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(days=30)), username])
+		await connection.execute("UPDATE users SET refresh_token=?, token_until=? WHERE username = ?;", [new_token, (datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(days=30)), username.lower()])
 		await connection.commit()
 		await connection.close()
 	except ValueError:

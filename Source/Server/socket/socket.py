@@ -27,29 +27,25 @@ async def handler(websocket):
 		auth = json.loads(auth_raw)
 	except JSONDecodeError:
 		await websocket.send('Incorrect auth, JSONDecoderError, 1')
-		await websocket.close(code = 4002, reason = "Incorrect auth")
+		await websocket.close(code = 1008, reason = "Incorrect auth")
 
 	if not('Authorization' in auth):
 		await websocket.send('Incorrect auth, Authorization not in message')
-		await websocket.close(code = 4002, reason = "Incorrect auth")
+		await websocket.close(code = 1008, reason = "Incorrect auth")
 
 	auth = auth.get('Authorization', '').split()
 
 	if len(auth) != 2:
 		await websocket.send(f'Incorrect auth, too many or not enough parts. {auth}')
-		await websocket.close(code = 4002, reason = "Incorrect auth")
+		await websocket.close(code = 1008, reason = "Incorrect auth")
 
 	user_info = {}
 
-	try:
-		user_info = validate_user(auth[1])
-	except (DecodeError, IndexError):
-		await websocket.send('Incorrect auth')
-		await websocket.close(code = 4002, reason = "Incorrect auth")
+	user_info = validate_user(auth[1])
 
-	if not(user_info):
-		await websocket.send('Incorrect auth')
-		await websocket.close(code = 4002, reason = "Incorrect auth")
+	if user_info.get('status', '') != 200:
+		await websocket.send(user_info.get('detail', ''))
+		await websocket.close(code = 1008 if user_info.get('status', '') == 401 else 1003)
 
 	connected_idle.remove(websocket)
 	connected[user_info.get('sub', '')] = websocket
