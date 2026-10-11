@@ -4,6 +4,7 @@ import secrets
 import bcrypt
 from fastapi import APIRouter, status
 
+from Source.Server.auth.token import token_generator
 from Source.Server.database.database import register_user
 from Source.Server.models.user import User
 
@@ -27,4 +28,4 @@ async def regUser(user: User):
 	if output["status"] != 201:
 		return {"status": f"{status.HTTP_500_INTERNAL_SERVER_ERROR}"}
 
-	return {'status': f"{status.HTTP_201_CREATED}", "refresh": refresh_token}
+	return {'status': f"{status.HTTP_201_CREATED}", "refresh_token": refresh_token, "bearer": token_generator(username, 'user')}

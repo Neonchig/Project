@@ -1,7 +1,7 @@
 import asyncio
 
 from Source.Server.api.api import api_serve  # Port - 8080
-from Source.Server.socket.socket import socket_serve  # Port - 9801
+from Source.Server.socket.my_socket import socket_serve  # Port - 9801
 
 
 async def main():

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from http import HTTPStatus
 from json import JSONDecodeError
@@ -11,48 +12,43 @@ from Source.Server.database.database import (
 	get_group_by_name,
 	get_unsent,
 	get_users_in_group,
+	move_to_unsent,
 )
 
-connected_idle = set()
+pipe = asyncio.Queue()
 connected = {}
+
+async def process_request(conn, request) -> int | None:
+
+	if "Authorization" not in request.headers:
+		return conn.respond(HTTPStatus.UNAUTHORIZED, 'No "Authorization" field\n')
+
+	auth = request.headers.get("Authorization", "").split()
+	try:
+		match auth[0].lower():
+			case 'bearer':
+				user_info = validate_user(auth[1])
+			case _:
+				return conn.respond(HTTPStatus.UNAUTHORIZED, 'Invalid authorization scheme. Only bearer supported')
+	except IndexError:
+		return conn.respond(HTTPStatus.UNAUTHORIZED, 'Invalid authorization scheme. Only bearer supported')
+
+
+	if user_info.get('status') != 200:
+		return conn.respond(HTTPStatus.UNAUTHORIZED, user_info.get('detail'))
+
+	await pipe.put(user_info)
+
+	return None
 
 async def handler(websocket):
 
+	user_info = await pipe.get()
+	connected[user_info.get('sub')] = websocket
+	for m in await get_unsent(user_info.get('sub', '')):
+		await websocket.send(m)
 
-	connected_idle.add(websocket)
-
-	auth = {}
-	auth_raw = await websocket.recv()
-	try:
-		auth = json.loads(auth_raw)
-	except JSONDecodeError:
-		await websocket.send('Incorrect auth, JSONDecoderError, 1')
-		await websocket.close(code = 1008, reason = "Incorrect auth")
-
-	if not('Authorization' in auth):
-		await websocket.send('Incorrect auth, Authorization not in message')
-		await websocket.close(code = 1008, reason = "Incorrect auth")
-
-	auth = auth.get('Authorization', '').split()
-
-	if len(auth) != 2:
-		await websocket.send(f'Incorrect auth, too many or not enough parts. {auth}')
-		await websocket.close(code = 1008, reason = "Incorrect auth")
-
-	user_info = {}
-
-	user_info = validate_user(auth[1])
-
-	if user_info.get('status', '') != 200:
-		await websocket.send(user_info.get('detail', ''))
-		await websocket.close(code = 1008 if user_info.get('status', '') == 401 else 1003)
-
-	connected_idle.remove(websocket)
-	connected[user_info.get('sub', '')] = websocket
-
-	for message in await get_unsent(user_info.get('sub', '')):
-		await websocket.send(message)
-		await clear_unsent(user_info.get('sub', ''))
+	await clear_unsent(user_info.get('sub'))
 
 	async for m in websocket:
 		m = m.strip()
@@ -79,7 +75,7 @@ async def handler(websocket):
 							if websocket_to:
 								await websocket_to.send(json.dumps({"from": user_info.get('sub', ''), "message": request.get('message', '')}))
 							else:
-								await websocket.send(json.dumps({'status': HTTPStatus.UNPROCESSABLE_CONTENT, 'message': 'User is not connected'}))
+								await move_to_unsent(request.get('message', ''), user_info.get('sub', ''), request.get('to', ''))
 						else:
 							await websocket.send(json.dumps({'status': HTTPStatus.UNPROCESSABLE_CONTENT, 'message': "Incorrect 'to' field"}))
 					case "group_message":
@@ -101,5 +97,5 @@ async def handler(websocket):
 							await websocket.send(json.dumps({'status': HTTPStatus.UNPROCESSABLE_CONTENT, 'message': "Group name must be provided"}))
 
 async def socket_serve():
-	async with serve(handler, "0.0.0.0", 9801) as server: # type: ignore
+	async with serve(handler, "0.0.0.0", 9801, process_request=process_request) as server: # type: ignore
 		await server.serve_forever()

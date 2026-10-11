@@ -7,3 +7,7 @@ Test_app
 Frontend
 test.py
 *.jpg
+*.db
+config.json
+.zed
+.vscode

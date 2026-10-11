@@ -9,6 +9,8 @@ from fastapi import status
 
 from Source.Server.core.config import env
 
+# ! DEPRECATED, будет изменена структура БД
+
 db_path = str(env.get('ProjPath', '')) + "/Source/Server/database/app.db"
 
 async def get_unsent(username: str):
@@ -119,7 +121,6 @@ async def get_user(username: str) -> aiosqlite.Row | dict[str, str]:
 	except IndexError:
 		await connection.close()
 		return {"status": f"{status.HTTP_500_INTERNAL_SERVER_ERROR}", "message": "User not found"}
-		 # TODO: Хэндлить исключения
 
 	return output[0]
 
