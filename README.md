@@ -4,17 +4,34 @@
 
 ## Структура
 ```
-.
-└─ Source - Директория с исходным кодом
-   ├── Server - Серверная часть
-   │   ├── api - Файлы API
-   │   ├── auth - Работа с jwt
-   │   ├── core - Основная конфигурация серверной части
-   │   ├── database - Работа с базой данных
-   │   ├── models - Pydantic-модели
-   │   ├── socket - Работа с websocket
-   │   └── static - Статические элементы
-   └── Client - Клиентская часть (Терминальное приложение)
+ .
+├──  main.py - Основоной файл для запуска сервера
+├──  pyproject.toml
+├── 󰂺 README.md
+├──  requirements.txt - Список зависимостей
+└──  Source
+    ├──  api - API, каждый файл кроме api.py - эндпоинт
+    │   ├──  __init__.py
+    │   ├──  api.py
+    │   ├──  icon.py
+    │   ├──  login_user.py
+    │   ├──  refresh.py
+    │   └──  register_user.py
+    ├──  auth
+    │   └──  token.py - Работа с JWT
+    ├──  core
+    │   └──  config.py - Работа с конфигом 
+    ├──  database
+    │   └──  database.py - Работа с БД
+    ├──  Docs.md
+    ├──  models - Pydantic модели для валидации данных
+    │   ├──  __init__.py
+    │   ├──  message.py
+    │   └──  user.py 
+    ├──  socket
+    │   └──  my_socket.py - файл сокета
+    └──  static
+        └──  favicon.ico - Иконка для веб-сайта (плейсхолдер)
 ```
 ## Используемые технологии
 

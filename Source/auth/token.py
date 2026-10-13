@@ -3,7 +3,7 @@ import datetime
 import jwt
 from jwt.exceptions import DecodeError
 
-from Source.Server.core.config import env
+from Source.core.config import env
 
 
 def token_generator(sub: str, aud: str):

@@ -4,9 +4,9 @@ import secrets
 import bcrypt
 from fastapi import APIRouter, status
 
-from Source.Server.auth.token import token_generator
-from Source.Server.database.database import register_user
-from Source.Server.models.user import User
+from Source.auth.token import token_generator
+from Source.database.database import register_user
+from Source.models.user import User
 
 router = APIRouter()
 

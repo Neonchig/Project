@@ -6,8 +6,8 @@ from json import JSONDecodeError
 from jwt.exceptions import DecodeError
 from websockets.asyncio.server import serve
 
-from Source.Server.auth.token import validate_user
-from Source.Server.database.database import (
+from Source.auth.token import validate_user
+from Source.database.database import (
 	clear_unsent,
 	get_group_by_name,
 	get_unsent,

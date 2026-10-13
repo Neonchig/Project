@@ -1,14 +1,13 @@
 import hashlib
-import re
 from secrets import token_urlsafe
 
 import bcrypt
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
-from Source.Server.auth.token import token_generator
-from Source.Server.database.database import get_user, update_token
-from Source.Server.models.user import User
+from Source.auth.token import token_generator
+from Source.database.database import get_user, update_token
+from Source.models.user import User
 
 router = APIRouter()
 

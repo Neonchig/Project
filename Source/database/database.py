@@ -7,7 +7,7 @@ from uuid import uuid4
 import aiosqlite
 from fastapi import status
 
-from Source.Server.core.config import env
+from Source.core.config import env
 
 # ! DEPRECATED, будет изменена структура БД
 

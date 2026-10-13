@@ -4,8 +4,8 @@ import secrets
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
-from Source.Server.auth.token import token_generator
-from Source.Server.database.database import get_user, update_token
+from Source.auth.token import token_generator
+from Source.database.database import get_user, update_token
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
